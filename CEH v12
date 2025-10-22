@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>El Tubes â€” Final</title>
+  <link rel="icon" href="https://www.google.com/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdn.plyr.io/3.7.8/plyr.css" />
+  <style>
+    :root{
+      --bg:#141414; --text:#fff; --muted:#999; --accent:#e50914; --panel:#222;
+    }
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);transition:background .2s,color .2s}
+    body.light-theme{--bg:#fff;--text:#000;--muted:#444;--accent:#007bff;--panel:#eee}
+    .header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--panel);border-bottom:1px solid rgba(255,255,255,0.03)}
+    .logo{font-weight:700;color:var(--accent)}
+    .nav-links{display:flex;gap:12px;align-items:center}
+    .nav-link{padding:8px 10px;border-radius:6px;cursor:pointer;color:var(--text);text-decoration:none}
+    .nav-link.active{background:rgba(0,0,0,0.2)}
+    .search-input{padding:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--text)}
+    .content{padding:20px;max-width:1100px;margin:0 auto}
+    /* Home preview rows */
+    .preview-section{margin-bottom:24px}
+    .section-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+    .section-title{font-size:18px;font-weight:600}
+    .preview-row{display:flex;gap:12px;align-items:flex-start;overflow:hidden}
+    .preview-card{width:240px;flex-shrink:0;background:var(--panel);padding:8px;border-radius:8px;display:flex;flex-direction:column;gap:8px}
+    .thumb{width:100%;height:135px;background:#111;border-radius:6px;overflow:hidden}
+    .thumb img{width:100%;height:100%;object-fit:cover;display:block}
+    .card-title{font-size:14px;margin:0;color:var(--text)}
+    .view-more{background:none;border:1px solid var(--accent);color:var(--accent);padding:8px 10px;border-radius:6px;cursor:pointer}
+    /* Videos tab: folders */
+    .folders{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+    .folder{background:var(--panel);padding:12px;border-radius:8px;display:flex;align-items:center;justify-content:space-between}
+    .folder-info{display:flex;flex-direction:column;gap:6px}
+    .folder-label{font-weight:600}
+    .folder-meta{color:var(--muted);font-size:13px}
+    .videos-list{background:var(--panel);margin-top:8px;padding:10px;border-radius:8px;display:none;flex-direction:column;gap:10px}
+    .video-entry{display:flex;gap:10px;align-items:center;background:rgba(0,0,0,0.15);padding:8px;border-radius:6px}
+    .video-thumb{width:160px;height:90px;flex-shrink:0;border-radius:6px;overflow:hidden}
+    .video-thumb img{width:100%;height:100%;object-fit:cover}
+    .video-meta{flex:1}
+    .btn{background:var(--accent);border:none;color:#fff;padding:8px 10px;border-radius:6px;cursor:pointer}
+    .small-btn{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--text);padding:6px 8px;border-radius:6px;cursor:pointer}
+    .search-bar{display:flex;gap:8px;align-items:center;margin-bottom:12px}
+    /* modal */
+    .modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.8);align-items:center;justify-content:center;z-index:9999}
+    .modal-inner{width:90%;max-width:900px;background:var(--panel);padding:12px;border-radius:8px;position:relative}
+    .close{position:absolute;right:10px;top:8px;font-size:20px;color:var(--text);border:none;background:none;cursor:pointer}
+    @media(max-width:800px){
+      .preview-row{overflow-x:auto;padding-bottom:8px}
+      .preview-card{width:200px}
+      .video-thumb{width:120px;height:72px}
+    }
+  
+.brand {
+    font-family: 'Poppins', sans-serif;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #ff0000;
+    display: inline-block;
+    white-space: nowrap;
+    margin-right: auto;
+}
+
+html, body {
+    max-width: 100vw;
+    overflow-x: hidden;
+    transform-origin: top left;
+    transform: scale(1);
+}
+* {
+    box-sizing: border-box;
+}
+</style>
+
+
+</head>
+<body>
+  <div class="header">
+    <div style="display:flex;align-items:center;gap:16px">
+      <div class="logo">El Tubes</div>
+      <nav class="nav-links">
+        <a class="nav-link active" onclick="openTab('home', event)">Home</a>
+        <a class="nav-link" onclick="openTab('videos', event)">Videos</a>
+        <a class="nav-link" onclick="openTab('about', event)">About</a>
+      </nav>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <input id="globalSearch" class="search-input" placeholder="Search videos or folders..." oninput="filterVideosInVideosTab()" style="width:260px">
+      <button class="small-btn" onclick="toggleTheme()">ðŸŒ™</button>
+    </div>
+  </div>
+
+  <!-- Home tab -->
+  <div id="home" class="tab-content" style="display:block">
+    <div class="content">
+      <h2>Welcome to El Tubes</h2>
+      <p style="color:var(--muted)">Preview: first 2 videos from each folder. Click <strong>View More</strong> to jump to the Videos tab and open the folder.</p>
+
+      <!-- Preview sections will be injected here -->
+      <div id="home-previews"></div>
+
+    </div>
+  </div>
+
+  <!-- Videos tab -->
+  <div id="videos" class="tab-content" style="display:none">
+    <div class="content">
+      <h2>All Videos</h2>
+      <div class="search-bar">
+        <input id="videosSearch" class="search-input" placeholder="Search inside videos tab..." oninput="filterVideosInVideosTab()">
+        <button class="small-btn" onclick="clearVideoSearch()">Clear</button>
+      </div>
+
+      <div id="folders" class="folders"></div>
+    </div>
+  </div>
+
+  <!-- About tab -->
+  <div id="about" class="tab-content" style="display:none">
+    <div class="content">
+      <h2>About El Tubes</h2>
+      <p>This platform provides sample videos and an easy folder-based interface for organizing your course videos. Edit the <code>videoSections</code> object in the script to add folders and videos. Comments in the code show exactly where to update titles and IDs.</p>
+    </div>
+  </div>
+
+  <!-- Modal for playback -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-inner">
+      <button class="close" onclick="closePlayer()">âœ•</button>
+      <div id="player-wrap"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.plyr.io/3.7.8/plyr.js"></script>
+  <script>
+    /*********************************************************
+     * ðŸŽ¯ EDITABLE DATA: list your folders and videos here.
+     * Format:
+     *  videoSections = {
+     *    folderKey: {
+     *      label: 'Visible Folder Label',
+     *      videos: [
+     *        { id: 'YOUTUBE_ID', title: 'Friendly Title' },
+     *        ...
+     *      ]
+     *    },
+     *    ...
+     *  }
+     *
+     * Replace the example 'dQw4w9WgXcQ' IDs with your unlisted YouTube IDs.
+     *********************************************************/
+    const videoSections = {
+      // Folder 1 â€” Introductions (example)
+      introductions: {
+        label: 'Introductions', // <-- edit folder label here
+        videos: [
+          { id: 'dQw4w9WgXcQ', title: 'Welcome to the Course â€” Intro (Video 1)' }, // <-- Video 1: edit id and title
+          { id: 'dQw4w9WgXcQ', title: 'Platform Overview â€” Intro (Video 2)' }      // <-- Video 2
+        ]
+      },
+
+      // Folder 2 â€” Networking (example)
+      networking: {
+        label: 'Networking Basics',
+        videos: [
+          { id: 'dQw4w9WgXcQ', title: 'Intro to Networking (Video 1)' },
+          { id: 'dQw4w9WgXcQ', title: 'Understanding IPs (Video 2)' },
+          { id: 'dQw4w9WgXcQ', title: 'Ping & Traceroute (Video 3)' }
+        ]
+      },
+
+      // Folder 3 â€” Scanning & Security (example)
+      scanning: {
+        label: 'Scanning & Security',
+        videos: [
+          { id: 'dQw4w9WgXcQ', title: 'Port Scanning Basics (Video 1)' },
+          { id: 'dQw4w9WgXcQ', title: 'Vulnerability Scanning (Video 2)' },
+          { id: 'dQw4w9WgXcQ', title: 'Interpreting Scan Results (Video 3)' }
+        ]
+      }
+    };
+
+    /*********************************************************
+     * No need to edit below unless you want behavior changes.
+     *********************************************************/
+    const foldersContainer = document.getElementById('folders');
+    const homePreviews = document.getElementById('home-previews');
+    let plyrPlayer = null;
+
+    // Utility: YouTube thumbnail helper
+    function ytThumb(id){ return `https://i.ytimg.com/vi/${id}/hqdefault.jpg`; }
+
+    // Theme toggle
+    function toggleTheme(){
+      document.body.classList.toggle('light-theme');
+      const btn = document.querySelector('.small-btn');
+      btn.textContent = document.body.classList.contains('light-theme') ? 'ðŸŒž' : 'ðŸŒ™';
+    }
+
+    // Tab switching (used by header links)
+    function openTab(tabName, event){
+      document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+      document.getElementById(tabName).style.display = 'block';
+      document.querySelectorAll('.nav-link').forEach(n => n.classList.remove('active'));
+      if(event && event.target) event.target.classList.add('active');
+      // If we land on videos tab and a folder key is queued to open, open it
+      if(tabName === 'videos' && window._queuedFolderToOpen){
+        toggleFolder(window._queuedFolderToOpen);
+        // scroll into view
+        const el = document.querySelector(`[data-folder="${window._queuedFolderToOpen}"]`);
+        if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+        window._queuedFolderToOpen = null;
+      }
+    }
+
+    // Renders the Home tab previews (first 2 videos per folder)
+    function renderHomePreviews(){
+      homePreviews.innerHTML = '';
+      Object.keys(videoSections).forEach(key => {
+        const folder = videoSections[key];
+        const section = document.createElement('div');
+        section.className = 'preview-section';
+        section.innerHTML = `
+          <div class="section-header">
+            <div class="section-title">${folder.label}</div>
+            <div>
+              <button class="view-more" onclick="openFolderInVideosTab('${key}')">View More</button>
+            </div>
+          </div>
+        `;
+        const row = document.createElement('div');
+        row.className = 'preview-row';
+        // show up to 2 videos as preview
+        const previews = folder.videos.slice(0,2);
+        previews.forEach((v,i)=>{
+          const card = document.createElement('div');
+          card.className = 'preview-card';
+          card.innerHTML = `
+            <div class="thumb"><img src="${ytThumb(v.id)}" alt="${v.title}"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center">
+              <div style="flex:1;margin-right:8px"><div class="card-title">${v.title}</div></div>
+              <div><button class="btn" onclick="playVideo('${v.id}')">Play</button></div>
+            </div>
+          `;
+          row.appendChild(card);
+        });
+        section.appendChild(row);
+        homePreviews.appendChild(section);
+      });
+    }
+
+    // When user clicks View More on Home: open Videos tab and expand the folder
+    function openFolderInVideosTab(folderKey){
+      // queue the folder key to open when Videos tab is visible
+      window._queuedFolderToOpen = folderKey;
+      // open videos tab programmatically
+      const videosLink = Array.from(document.querySelectorAll('.nav-link')).find(n => n.textContent.trim() === 'Videos');
+      if(videosLink) videosLink.click();
+      else openTab('videos');
+    }
+
+    // Build folders in Videos tab
+    function renderFolders(filtered=null){
+      foldersContainer.innerHTML = '';
+      Object.keys(videoSections).forEach(key => {
+        const folder = videoSections[key];
+        // filter videos inside folder if search is active
+        const filteredVideos = (filtered) ? folder.videos.filter(v => {
+          const q = filtered.toLowerCase();
+          return v.title.toLowerCase().includes(q) || folder.label.toLowerCase().includes(q);
+        }) : folder.videos;
+        if(filtered && filteredVideos.length===0) return; // skip folder if no match
+        const bar = document.createElement('div');
+        bar.className = 'folder';
+        bar.dataset.folder = key;
+        bar.innerHTML = `
+          <div class="folder-info">
+            <div class="folder-label">${folder.label}</div>
+            <div class="folder-meta">(${filteredVideos.length} video${filteredVideos.length>1?'s':''})</div>
+          </div>
+          <div>
+            <button class="small-btn" onclick="toggleFolder('${key}')">Details â–¾</button>
+          </div>
+        `;
+        const list = document.createElement('div');
+        list.className = 'videos-list';
+        list.dataset.for = key;
+        // append filteredVideos into list
+        filteredVideos.forEach((v,i)=>{
+          const entry = document.createElement('div');
+          entry.className = 'video-entry';
+          entry.innerHTML = `
+            <div class="video-thumb"><img src="${ytThumb(v.id)}" alt="${v.title}"></div>
+            <div class="video-meta">
+              <div style="font-weight:600">${v.title}</div>
+              <div style="color:var(--muted);font-size:13px">ID: <code>${v.id}</code></div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn" onclick="playVideo('${v.id}')">Play</button>
+            </div>
+          `;
+          list.appendChild(entry);
+        });
+        foldersContainer.appendChild(bar);
+        foldersContainer.appendChild(list);
+      });
+    }
+
+    // Toggle folder - only one open at a time
+    function toggleFolder(key){
+      const lists = document.querySelectorAll('.videos-list');
+      lists.forEach(l => {
+        if(l.dataset.for === key){
+          l.style.display = (l.style.display === 'flex') ? 'none' : 'flex';
+          l.style.flexDirection = 'column';
+        } else {
+          l.style.display = 'none';
+        }
+      });
+    }
+
+    // Play video in modal using Plyr
+    function playVideo(ytId){
+      const modal = document.getElementById('modal');
+      const wrap = document.getElementById('player-wrap');
+      wrap.innerHTML = `<div id="player" data-plyr-provider="youtube" data-plyr-embed-id="${ytId}"></div>`;
+      modal.style.display = 'flex';
+      if(plyrPlayer && plyrPlayer.destroy) plyrPlayer.destroy();
+      plyrPlayer = new Plyr('#player', { controls:['play','progress','current-time','mute','volume','fullscreen'] });
+    }
+
+    function closePlayer(){
+      const modal = document.getElementById('modal');
+      modal.style.display = 'none';
+      if(plyrPlayer && plyrPlayer.destroy) plyrPlayer.destroy();
+      plyrPlayer = null;
+    }
+
+    // Search/filter for Videos tab & Home global search
+    function filterVideosInVideosTab(){
+      const q = (document.getElementById('videosSearch')?.value || document.getElementById('globalSearch').value || '').trim();
+      renderFolders(q ? q.toLowerCase() : null);
+      // auto-expand all matching folders when searching
+      if(q){
+        document.querySelectorAll('.videos-list').forEach(l=>l.style.display='flex');
+        // switch to Videos tab while searching
+        const videosLink = Array.from(document.querySelectorAll('.nav-link')).find(n => n.textContent.trim() === 'Videos');
+        if(videosLink && document.getElementById('videos').style.display === 'none') videosLink.click();
+      }
+    }
+
+    function clearVideoSearch(){
+      document.getElementById('videosSearch').value = '';
+      document.getElementById('globalSearch').value = '';
+      renderFolders(null);
+    }
+
+    // close modal when clicking outside inner
+    document.getElementById('modal').addEventListener('click', (e)=>{ if(e.target.id==='modal') closePlayer(); });
+
+    // initial render
+    renderHomePreviews();
+    renderFolders();
+
+    // expose helpers for console editing
+    window.videoSections = videoSections;
+    window.renderFolders = renderFolders;
+    window.renderHomePreviews = renderHomePreviews;
+    window.playVideo = playVideo;
+  </script>
+</body>
+</html>
